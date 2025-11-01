@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ export function BinarySearch() {
   const [low, setLow] = useState(-1);
   const [high, setHigh] = useState(-1);
   const [mid, setMid] = useState(-1);
+  const [explanation, setExplanation] = useState("Enter a target value and click Search");
+  const isSearchingRef = useRef(false);
 
   const generateRandomArray = () => {
     const arr = Array.from({ length: 12 }, (_, i) => ({
@@ -29,6 +31,7 @@ export function BinarySearch() {
     setLow(-1);
     setHigh(-1);
     setMid(-1);
+    setExplanation("Enter a target value and click Search");
   };
 
   useEffect(() => {
@@ -45,12 +48,20 @@ export function BinarySearch() {
     }
 
     setIsSearching(true);
+    isSearchingRef.current = true;
     const arr: ElementState[] = array.map((item) => ({ ...item, state: "default" }));
     let left = 0;
     let right = arr.length - 1;
     let found = false;
 
+    setExplanation(`Searching for ${targetValue} in sorted array`);
+
     while (left <= right) {
+      if (!isSearchingRef.current) {
+        setExplanation("Search paused");
+        return;
+      }
+
       const middle = Math.floor((left + right) / 2);
       
       setLow(left);
@@ -67,32 +78,38 @@ export function BinarySearch() {
           item.state = "eliminated";
         }
       });
+      setExplanation(`Checking middle element at index ${middle}: value is ${arr[middle].value}`);
       setArray([...arr]);
-      await sleep(1500 - speed[0] * 10);
+      await sleep(1000 - speed[0] * 9);
 
       if (arr[middle].value === targetValue) {
         arr[middle].state = "found";
         setArray([...arr]);
         found = true;
+        setExplanation(`Found ${targetValue} at index ${middle}! 🎉`);
         toast.success(`Found ${targetValue} at index ${middle}!`);
         break;
       } else if (arr[middle].value < targetValue) {
+        setExplanation(`${arr[middle].value} < ${targetValue}, searching right half`);
         left = middle + 1;
         arr[middle].state = "eliminated";
       } else {
+        setExplanation(`${arr[middle].value} > ${targetValue}, searching left half`);
         right = middle - 1;
         arr[middle].state = "eliminated";
       }
       
       setArray([...arr]);
-      await sleep(500 - speed[0] * 3);
+      await sleep(500 - speed[0] * 4);
     }
 
     if (!found) {
+      setExplanation(`${targetValue} not found in the array`);
       toast.error(`${targetValue} not found in array`);
     }
 
     setIsSearching(false);
+    isSearchingRef.current = false;
     setLow(-1);
     setHigh(-1);
     setMid(-1);
@@ -104,6 +121,8 @@ export function BinarySearch() {
     setHigh(-1);
     setMid(-1);
     setIsSearching(false);
+    isSearchingRef.current = false;
+    setExplanation("Enter a target value and click Search");
   };
 
   const getBarColor = (state: string) => {
@@ -164,6 +183,11 @@ export function BinarySearch() {
           step={1}
           className="w-full"
         />
+      </div>
+
+      {/* Explanation */}
+      <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+        <p className="text-center text-lg font-medium">{explanation}</p>
       </div>
 
       {/* Visualization */}

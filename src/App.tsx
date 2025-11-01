@@ -12,6 +12,7 @@ import DataStructures from "./pages/DataStructures";
 import OOP from "./pages/OOP";
 import BubbleSortPage from "./pages/visualizers/BubbleSortPage";
 import BinarySearchPage from "./pages/visualizers/BinarySearchPage";
+import BinaryTreePage from "./pages/visualizers/BinaryTreePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/searching" element={<Searching />} />
               <Route path="/searching/binary" element={<BinarySearchPage />} />
               <Route path="/data-structures" element={<DataStructures />} />
+              <Route path="/data-structures/binary-tree" element={<BinaryTreePage />} />
               <Route path="/oop" element={<OOP />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

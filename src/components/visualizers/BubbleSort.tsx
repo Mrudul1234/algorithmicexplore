@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ export function BubbleSort() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndices, setCurrentIndices] = useState<number[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [explanation, setExplanation] = useState("Click Start to begin sorting");
+  const isPlayingRef = useRef(false);
 
   const generateRandomArray = () => {
     const newArray = Array.from({ length: 15 }, () => ({
@@ -55,23 +57,36 @@ export function BubbleSort() {
     const arr = [...array];
     const n = arr.length;
     setIsPlaying(true);
+    isPlayingRef.current = true;
 
     for (let i = 0; i < n - 1; i++) {
+      if (!isPlayingRef.current) {
+        setExplanation("Sorting paused");
+        return;
+      }
+
       for (let j = 0; j < n - i - 1; j++) {
-        if (!isPlaying) return;
+        if (!isPlayingRef.current) {
+          setExplanation("Sorting paused");
+          return;
+        }
 
         // Highlight comparing elements
         setCurrentIndices([j, j + 1]);
         arr[j].state = "comparing";
         arr[j + 1].state = "comparing";
+        setExplanation(`Comparing ${arr[j].value} and ${arr[j + 1].value}`);
         setArray([...arr]);
-        await sleep(101 - speed[0]);
+        await sleep(1000 - speed[0] * 9);
 
         // Swap if needed
         if (arr[j].value > arr[j + 1].value) {
+          setExplanation(`${arr[j].value} > ${arr[j + 1].value}, swapping positions`);
           [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
           setArray([...arr]);
-          await sleep(101 - speed[0]);
+          await sleep(1000 - speed[0] * 9);
+        } else {
+          setExplanation(`${arr[j].value} ≤ ${arr[j + 1].value}, no swap needed`);
         }
 
         // Reset states
@@ -80,6 +95,7 @@ export function BubbleSort() {
       }
       // Mark as sorted
       arr[n - i - 1].state = "sorted";
+      setExplanation(`Element ${arr[n - i - 1].value} is now in its correct position`);
       setArray([...arr]);
     }
 
@@ -88,6 +104,8 @@ export function BubbleSort() {
     setArray([...arr]);
     setCurrentIndices([]);
     setIsPlaying(false);
+    isPlayingRef.current = false;
+    setExplanation("Sorting complete! All elements are now in order");
     toast.success("Sorting complete!");
   };
 
@@ -95,6 +113,18 @@ export function BubbleSort() {
     setArray(array.map((item) => ({ ...item, state: "default" })));
     setCurrentIndices([]);
     setIsPlaying(false);
+    isPlayingRef.current = false;
+    setExplanation("Click Start to begin sorting");
+  };
+
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      setExplanation("Sorting paused");
+    } else {
+      bubbleSort();
+    }
   };
 
   const getBarColor = (state: string) => {
@@ -130,7 +160,7 @@ export function BubbleSort() {
           Random
         </Button>
 
-        <Button onClick={isPlaying ? () => setIsPlaying(false) : bubbleSort}>
+        <Button onClick={handlePlayPause} disabled={array.length === 0}>
           {isPlaying ? (
             <>
               <Pause className="h-4 w-4 mr-2" />
@@ -164,6 +194,11 @@ export function BubbleSort() {
           step={1}
           className="w-full"
         />
+      </div>
+
+      {/* Explanation */}
+      <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+        <p className="text-center text-lg font-medium">{explanation}</p>
       </div>
 
       {/* Visualization */}
